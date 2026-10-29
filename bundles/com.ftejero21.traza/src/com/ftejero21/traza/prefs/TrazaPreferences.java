@@ -19,6 +19,7 @@ public final class TrazaPreferences {
 	public static final String DATABASES = "databases";
 	public static final String MCP_PORT = "mcpPort";
 	public static final String AI_NOTICE_SHOWN = "aiNoticeShown";
+	public static final String COPILOT_AGENT_MODE = "copilotAgentMode";
 
 	private static final List<Consumer<String>> LISTENERS = new CopyOnWriteArrayList<>();
 	private static boolean hooked;
@@ -80,6 +81,16 @@ public final class TrazaPreferences {
 		flush();
 	}
 
+	/** Crear el modo «Traza» del chat de Copilot (archivo de agente gestionado). Activado por defecto. */
+	public static boolean copilotAgentMode() {
+		return node().getBoolean(COPILOT_AGENT_MODE, true);
+	}
+
+	public static void setCopilotAgentMode(boolean v) {
+		node().putBoolean(COPILOT_AGENT_MODE, v);
+		flush();
+	}
+
 	public static void setLanguage(String v) {
 		node().put(LANGUAGE, "en".equals(v) ? "en" : "es");
 		flush();
@@ -106,6 +117,7 @@ public final class TrazaPreferences {
 		d.put(DATABASES, "[]");
 		d.putInt(MCP_PORT, 0);
 		d.putBoolean(AI_NOTICE_SHOWN, false);
+		d.putBoolean(COPILOT_AGENT_MODE, true);
 	}
 
 	/** Registra un listener de cambios (recibe la clave modificada). Devuelve una accion para quitarlo. */

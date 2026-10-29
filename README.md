@@ -9,7 +9,7 @@ vista (la webview Angular original) y la misma funcionalidad.
 
 > English summary: Traza for Eclipse is a port of the Traza VS Code extension. It shows how a feature flows through your
 > code (sequence diagrams, data simulation, log analysis, database map, change simulation). The AI part is done by GitHub
-> Copilot for Eclipse in Agent mode through a local MCP server bundled in the plugin; everything that does not use AI
+> Copilot for Eclipse, through a local MCP server bundled in the plugin and a custom "Traza" chat mode that the plugin adds to the Copilot mode selector; everything that does not use AI
 > (sample flow, opening `.flow.json` files, walkthrough, read-only database metadata, applying changes) works without Copilot.
 
 ---
@@ -30,7 +30,7 @@ La vista **Traza: Flujo** aloja la webview de Traza con estos modos:
 ## Requisitos
 
 - Eclipse IDE **2024-12 o posterior**, ejecutandose con **Java 17** o superior.
-- Para la IA: [GitHub Copilot for Eclipse](https://github.com/microsoft/copilot-eclipse) con sesion iniciada y el chat en **modo Agent**.
+- Para la IA: [GitHub Copilot for Eclipse](https://github.com/microsoft/copilot-eclipse) con sesion iniciada y el chat en **modo Traza** (o Agent).
   Sin Copilot todo lo que no usa IA sigue funcionando.
 - En Windows, el runtime **Microsoft Edge WebView2** (el navegador integrado de SWT lo necesita). En Linux, WebKitGTK.
 
@@ -39,20 +39,34 @@ La vista **Traza: Flujo** aloja la webview de Traza con estos modos:
 Desde un sitio de actualizacion p2 (zip local o URL publicada en GitHub Releases):
 
 1. `Help > Install New Software... > Add... > Archive...`
-2. Elige `com.ftejero21.traza.repository-0.1.0-SNAPSHOT.zip` (o pega la URL del sitio p2 publicado).
+2. Elige `com.ftejero21.traza.repository-0.1.1-SNAPSHOT.zip` (o pega la URL del sitio p2 publicado).
 3. Marca **Traza** (categoria Traza), acepta la licencia (MIT) y reinicia Eclipse.
 
 ## Primer uso con IA (GitHub Copilot)
 
 El plugin incluye un servidor MCP local (solo en `127.0.0.1`, protegido con un token) y se **registra solo** en Copilot.
 
-1. Abre el chat de GitHub Copilot en modo **Agent**.
+1. Abre el chat de GitHub Copilot y elige el modo **Traza** en el selector de modos (junto a Ask y Agent).
 2. Copilot mostrara un aviso rojo en el icono de herramientas MCP del chat: abre el dialogo de aprobacion y **aprueba el
    servidor "Traza: traza"** (tambien en `Preferencias > GitHub Copilot > MCP`). Se aprueba una sola vez: el puerto y el token son
    estables entre arranques. Si regeneras el token o cambia el puerto, hay que aprobarlo otra vez.
 3. Opcional: las herramientas de Traza son de solo lectura (`readOnlyHint`); puedes activar en las preferencias de Copilot la
    autoaprobacion de herramientas de solo lectura.
-4. En el chat escribe, por ejemplo: `usa Traza para explicar como funciona el login`, o usa los prompts MCP `flujo` y `cambio`.
+4. En el modo Traza escribe directamente tu peticion, por ejemplo `alta de solicitud de asegurado` o `como funciona el login`
+   (Traza decide si es un flujo o un cambio). Tambien funcionan los prompts MCP `flujo` y `cambio`.
+
+### El modo Traza (archivo gestionado)
+
+Copilot no permite registrar un modo por codigo: lee los archivos de agente de las carpetas del workspace. Por eso, si Copilot esta
+instalado y la preferencia `Preferencias > Traza > Añadir el modo «Traza» al chat de Copilot` esta activada (por defecto), el plugin
+escribe `.github/agents/Traza.agent.md` en **un solo** proyecto abierto (si hubiera uno en cada proyecto, el modo saldria repetido).
+
+- Se reconcilia al arrancar y al abrir, cerrar, añadir o eliminar proyectos; si el proyecto elegido desaparece, el archivo se mueve a otro.
+- Se añade a `.git/info/exclude` del repositorio del proyecto para no ensuciar Git (se omite si `.git` es un archivo: worktrees o submodulos).
+- El archivo lleva un marcador con version y hash. **Si lo editas tu, o ya existe un `Traza.agent.md` propio, Traza no lo vuelve a tocar**
+  (y no crea otro).
+- Para quitarlo, desactiva la preferencia: se borran los archivos gestionados sin modificar.
+- No contiene token ni puertos. Sigue siendo necesario aprobar el servidor "Traza: traza" en Copilot.
 
 **Plan B** si la politica de tu organizacion desactiva las contribuciones MCP de plugins: `Preferencias > Traza > Copiar
 configuracion MCP para Copilot` y pegala en `Preferencias > GitHub Copilot > MCP`.
@@ -73,7 +87,7 @@ Menu principal **Traza** y Quick Access (`Ctrl+3`):
 
 - Abrir flujo... (archivo JSON, JSON del editor activo o ejemplo; un `*.flow.json` seleccionado se abre directamente)
 - Abrir flujo de ejemplo
-- Generar flujo y Proponer cambio (abren el chat de Copilot con el prompt enviado)
+- Generar flujo y Proponer cambio (abren el chat de Copilot en modo Traza con el prompt enviado)
 - Elegir modelo (el modelo se elige en el selector del chat de Copilot)
 - Mostrar ultimo flujo generado
 - Visualizar flujo (oculto; parametros `flowId` y `mode`)
@@ -112,8 +126,8 @@ la configuracion que Copilot guarda localmente.
 
 ## Diferencias con la extension de VS Code
 
-- No existe el participante `@traza` con `/flujo` y `/cambio`: se sustituye por las herramientas MCP en modo Agent, los prompts MCP
-  `flujo` / `cambio` y los comandos que abren el chat.
+- No existe el participante `@traza` con `/flujo` y `/cambio`: se sustituye por el **modo Traza** del chat de Copilot, las herramientas
+  MCP, los prompts MCP `flujo` / `cambio` y los comandos que abren el chat.
 - No hay seleccion de modelo propia (`traza.model`) ni respuesta en streaming propia: el modelo lo elige Copilot y es su agente quien
   investiga y redacta la respuesta.
 - Los botones y anclas del chat se sustituyen por la apertura automatica de la vista y por texto `carpeta/ruta:linea`.
@@ -132,9 +146,9 @@ $env:JAVA_HOME='C:\Program Files\Java\jdk-18'; .\mvnw.cmd -B clean verify
 
 Artefactos:
 
-- `releng/com.ftejero21.traza.repository/target/com.ftejero21.traza.repository-0.1.0-SNAPSHOT.zip` (sitio p2 en zip)
+- `releng/com.ftejero21.traza.repository/target/com.ftejero21.traza.repository-0.1.1-SNAPSHOT.zip` (sitio p2 en zip)
 - `releng/com.ftejero21.traza.repository/target/repository/` (sitio p2)
-- `bundles/com.ftejero21.traza/target/com.ftejero21.traza-0.1.0-SNAPSHOT.jar`
+- `bundles/com.ftejero21.traza/target/com.ftejero21.traza-0.1.1-SNAPSHOT.jar`
 
 ### Scripts manuales (Node 18)
 
@@ -149,6 +163,12 @@ No se pueden verificar sin un Eclipse real con Copilot; conviene probarlas tras 
 - Que el language server de Copilot acepte `type: http` con `requestInit.headers` sobre `http://127.0.0.1` sin TLS.
 - Que la politica active la contribucion MCP (`isMcpContributionPointEnabled`) y que aparezca el dialogo de aprobacion de "Traza: traza".
 - Que `openChatView` con `autoSend` en modo Agent invoque realmente las herramientas.
+- Que el language server de Copilot detecte `.github/agents/Traza.agent.md` y «Traza» aparezca una sola vez en el selector de modos
+  (el selector recarga los modos con cada clic).
+- Que `openChatView` con `mode` = id (URI `file:`) del modo Traza lo seleccione, y que el id del language server coincida con la ruta del archivo.
+- Que Copilot (politica o preview) no desactive los agentes personalizados; en ese caso «Generar flujo» y «Proponer cambio» usan Agent.
+- Mover el archivo gestionado al cerrar o eliminar el proyecto anfitrion, y borrar el duplicado limpio al reabrir un proyecto.
+- Que `.git/info/exclude` reciba la ruta sin duplicados y que el archivo no aparezca en `git status`.
 - El tamano maximo de resultado de herramienta que admite el language server (ajustar los 45 000 / 100 000 caracteres si se truncan).
 - Que los prompts MCP `flujo` / `cambio` aparezcan como comandos con barra en el chat.
 - Como nombra Copilot las herramientas (los prompts del sistema citan `traza_search/read/list` literalmente).

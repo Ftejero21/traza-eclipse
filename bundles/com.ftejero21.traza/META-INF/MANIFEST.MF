@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Traza
 Bundle-Localization: plugin
 Bundle-SymbolicName: com.ftejero21.traza;singleton:=true
-Bundle-Version: 0.1.0.qualifier
+Bundle-Version: 0.1.1.qualifier
 Bundle-Vendor: Fernando Tejero (ftejero21)
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy

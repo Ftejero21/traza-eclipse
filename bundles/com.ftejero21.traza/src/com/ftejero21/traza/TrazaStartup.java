@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
 
 import com.ftejero21.traza.http.LocalHttpServer;
+import com.ftejero21.traza.mcp.CopilotAgentFile;
 import com.ftejero21.traza.mcp.CopilotBridge;
 
 /** Si GitHub Copilot esta instalado, arranca el servidor local en segundo plano (funciona tambien la configuracion manual y se fija el puerto). */
@@ -25,5 +26,6 @@ public class TrazaStartup implements IStartup {
 		};
 		job.setSystem(true);
 		job.schedule();
+		CopilotAgentFile.install();
 	}
 }

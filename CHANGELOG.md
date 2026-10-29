@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- Modo **Traza** en el selector del chat de GitHub Copilot for Eclipse (sustituye al participante `@traza` de VS Code): escribes la
+  peticion y Copilot genera el flujo o propone un cambio con las herramientas MCP de Traza.
+- Archivo de agente gestionado `.github/agents/Traza.agent.md`, escrito automaticamente en un solo proyecto del workspace y excluido
+  de Git (`.git/info/exclude`). Nunca sobrescribe ni borra un archivo modificado por el usuario.
+- Nueva preferencia `Preferencias > Traza` para activar o desactivar el modo (activado por defecto; al desactivarlo se borran los
+  archivos gestionados sin modificar).
+- «Generar flujo» y «Proponer cambio» abren el chat de Copilot en modo Traza (con modo Agent como alternativa).
+
 ## 0.1.0
 
 Primera version: port a Eclipse IDE (2024-12 o posterior, Java 17) de la extension de VS Code Traza 0.1.4.

@@ -32,6 +32,7 @@ public class TrazaPreferencePage extends PreferencePage implements IWorkbenchPre
 	private Combo theme;
 	private Label serverLabel;
 	private Label copilotLabel;
+	private Button agentMode;
 
 	@Override
 	public void init(IWorkbench workbench) {
@@ -91,9 +92,16 @@ public class TrazaPreferencePage extends PreferencePage implements IWorkbenchPre
 			}
 		});
 
+		agentMode = new Button(mcp, SWT.CHECK);
+		agentMode.setLayoutData(span2());
+		agentMode.setText(Ui.t(
+			"Añadir el modo «Traza» al chat de Copilot (crea .github/agents/Traza.agent.md en un proyecto abierto y lo excluye de Git)",
+			"Add the \"Traza\" mode to the Copilot chat (creates .github/agents/Traza.agent.md in an open project and excludes it from Git)"));
+		agentMode.setSelection(TrazaPreferences.copilotAgentMode());
+
 		Label help = new Label(mcp, SWT.WRAP);
 		help.setLayoutData(span2());
-		help.setText("Primer uso: abre el chat de GitHub Copilot en modo Agent y aprueba el servidor \"Traza: traza\" (aviso rojo del icono de herramientas MCP del chat, "
+		help.setText("Primer uso: abre el chat de GitHub Copilot, elige el modo Traza en el selector (o Agent) y aprueba el servidor \"Traza: traza\" (aviso rojo del icono de herramientas MCP del chat, "
 			+ "o Preferencias > GitHub Copilot > MCP). Opcional: activa la autoaprobación de herramientas de solo lectura en las preferencias de Copilot.\n"
 			+ "Si la política de Copilot desactiva las contribuciones MCP de plugins, usa \"Copiar configuración MCP para Copilot\" y pégala en Preferencias > GitHub Copilot > MCP.");
 		updateStatus();
@@ -144,6 +152,7 @@ public class TrazaPreferencePage extends PreferencePage implements IWorkbenchPre
 	public boolean performOk() {
 		TrazaPreferences.setLanguage(language.getSelectionIndex() == 1 ? "en" : "es");
 		TrazaPreferences.setTheme(theme.getSelectionIndex() == 1 ? "ide" : "traza");
+		TrazaPreferences.setCopilotAgentMode(agentMode.getSelection());
 		return true;
 	}
 

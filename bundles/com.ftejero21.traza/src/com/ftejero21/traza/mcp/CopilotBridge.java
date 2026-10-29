@@ -1,7 +1,12 @@
 package com.ftejero21.traza.mcp;
 
+import java.net.URI;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.ParameterizedCommand;
@@ -9,6 +14,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.osgi.framework.Bundle;
 
 import com.ftejero21.traza.TrazaPlugin;
 import com.ftejero21.traza.ai.Msg;
@@ -23,6 +29,9 @@ public final class CopilotBridge {
 	public static final String UPDATE_SITE = "https://azuredownloads-g3ahgwb5b8bkbxhd.b01.azurefd.net/github-copilot/";
 	public static final String UI_BUNDLE = "com.microsoft.copilot.eclipse.ui";
 	private static final String OPEN_CHAT = "com.microsoft.copilot.eclipse.commands.openChatView";
+	private static final String CORE_BUNDLE = "com.microsoft.copilot.eclipse.core";
+	private static final String MODE_MANAGER = "com.microsoft.copilot.eclipse.core.chat.CustomChatModeManager";
+	private static final AtomicBoolean REFRESH_WARNED = new AtomicBoolean();
 
 	private CopilotBridge() {
 	}
@@ -48,17 +57,26 @@ public final class CopilotBridge {
 
 	/** Abre el chat de Copilot en modo Agent con el texto (y lo envia si autoSend). Devuelve false si no se pudo. */
 	public static boolean openChat(String input, boolean autoSend) {
-		Boolean ok = Ui.sync(() -> openChatOnUi(input, autoSend, true));
+		Boolean ok = Ui.sync(() -> openChatOnUi(input, autoSend, true, "Agent"));
+		return ok != null && ok;
+	}
+
+	/** Abre el chat en el modo personalizado «Traza» (por su id); si no se encuentra, en modo Agent. */
+	public static boolean openChatInTrazaMode(String input, boolean autoSend) {
+		Boolean ok = Ui.sync(() -> {
+			String id = trazaModeId();
+			return openChatOnUi(input, autoSend, true, id != null ? id : "Agent");
+		});
 		return ok != null && ok;
 	}
 
 	/** Abre el chat de Copilot sin parametros. */
 	public static boolean openChatPlain() {
-		Boolean ok = Ui.sync(() -> openChatOnUi(null, false, false));
+		Boolean ok = Ui.sync(() -> openChatOnUi(null, false, false, "Agent"));
 		return ok != null && ok;
 	}
 
-	private static boolean openChatOnUi(String input, boolean autoSend, boolean withParams) {
+	private static boolean openChatOnUi(String input, boolean autoSend, boolean withParams, String mode) {
 		if (!isAvailable()) {
 			return false;
 		}
@@ -71,7 +89,7 @@ public final class CopilotBridge {
 				Map<String, String> full = new HashMap<>();
 				full.put(OPEN_CHAT + ".inputValue", input);
 				full.put(OPEN_CHAT + ".autoSend", String.valueOf(autoSend));
-				full.put(OPEN_CHAT + ".mode", "Agent");
+				full.put(OPEN_CHAT + ".mode", mode);
 				pc = ParameterizedCommand.generateCommand(cmd, full);
 				if (pc == null) {
 					Map<String, String> basic = new HashMap<>();
@@ -96,13 +114,80 @@ public final class CopilotBridge {
 		}
 	}
 
+	/** Id del modo personalizado «Traza» segun Copilot (lectura en memoria, sin esperar al language server), o null. */
+	static String trazaModeId() {
+		try {
+			Bundle b = Platform.getBundle(CORE_BUNDLE);
+			if (b == null) {
+				return null;
+			}
+			Class<?> c = b.loadClass(MODE_MANAGER);
+			Object instance = c.getField("INSTANCE").get(null);
+			Object modes = c.getMethod("getCustomModes").invoke(instance);
+			if (modes instanceof Iterable<?> it) {
+				Path managed = CopilotAgentFile.managedFilePath();
+				String byName = null;
+				for (Object mode : it) {
+					String id = call(mode, "getId");
+					String name = call(mode, "getDisplayName");
+					if (id == null) {
+						continue;
+					}
+					if (managed != null && id.startsWith("file:") && samePath(id, managed)) {
+						return id;
+					}
+					if (byName == null && "Traza".equalsIgnoreCase(name)) {
+						byName = id;
+					}
+				}
+				if (byName != null) {
+					return byName;
+				}
+			}
+		} catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+			TrazaPlugin.warn("No se pudo consultar los modos personalizados de Copilot (" + e.getClass().getSimpleName() + ").");
+		}
+		refreshModesAsync();
+		return null;
+	}
+
+	private static String call(Object target, String method) throws ReflectiveOperationException {
+		Object v = target.getClass().getMethod(method).invoke(target);
+		return v == null ? null : v.toString();
+	}
+
+	private static boolean samePath(String uri, Path expected) {
+		try {
+			return Paths.get(URI.create(uri)).toAbsolutePath().normalize().equals(expected);
+		} catch (IllegalArgumentException | FileSystemNotFoundException | SecurityException e) {
+			return false;
+		}
+	}
+
+	/** Pide a Copilot que vuelva a leer los modos personalizados del language server, sin esperar. */
+	static void refreshModesAsync() {
+		try {
+			Bundle b = Platform.getBundle(CORE_BUNDLE);
+			if (b == null) {
+				return;
+			}
+			Class<?> c = b.loadClass(MODE_MANAGER);
+			Object instance = c.getField("INSTANCE").get(null);
+			c.getMethod("syncCustomModesFromService").invoke(instance);
+		} catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+			if (REFRESH_WARNED.compareAndSet(false, true)) {
+				TrazaPlugin.warn("No se pudo refrescar los modos personalizados de Copilot (" + e.getClass().getSimpleName() + ").");
+			}
+		}
+	}
+
 	/** Texto de ayuda cuando Copilot no esta presente. */
 	public static String missingMessage() {
 		return Ui.t(
 			"Esta acción necesita GitHub Copilot for Eclipse, que no está instalado.\n\nInstálalo desde Help > Install New Software con el sitio:\n" + UPDATE_SITE
-				+ "\n\nDespués inicia sesión, usa el modo Agent y aprueba el servidor \"Traza: traza\" en el icono de herramientas del chat.",
+				+ "\n\nDespués inicia sesión, usa el modo Traza (o Agent) y aprueba el servidor \"Traza: traza\" en el icono de herramientas del chat.",
 			"This action needs GitHub Copilot for Eclipse, which is not installed.\n\nInstall it from Help > Install New Software with the site:\n" + UPDATE_SITE
-				+ "\n\nThen sign in, use Agent mode and approve the \"Traza: traza\" server in the tools icon of the chat.");
+				+ "\n\nThen sign in, use Traza mode (or Agent) and approve the \"Traza: traza\" server in the tools icon of the chat.");
 	}
 
 	/** Aviso de privacidad la primera vez que se usa la IA. */

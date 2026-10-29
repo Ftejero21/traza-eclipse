@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature id="com.ftejero21.traza.feature"
          label="Traza"
-         version="0.1.0.qualifier"
+         version="0.1.1.qualifier"
          provider-name="Fernando Tejero (ftejero21)">
 
    <description>

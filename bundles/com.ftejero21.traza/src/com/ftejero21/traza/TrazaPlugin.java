@@ -8,6 +8,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.ftejero21.traza.http.LocalHttpServer;
+import com.ftejero21.traza.mcp.CopilotAgentFile;
 import com.ftejero21.traza.mcp.JobRegistry;
 import com.ftejero21.traza.tools.AgentSessions;
 
@@ -36,6 +37,7 @@ public class TrazaPlugin extends AbstractUIPlugin {
 		try {
 			JobRegistry.cancelEverything();
 			AgentSessions.dispose();
+			CopilotAgentFile.uninstall();
 			LocalHttpServer.stop();
 		} finally {
 			instance = null;

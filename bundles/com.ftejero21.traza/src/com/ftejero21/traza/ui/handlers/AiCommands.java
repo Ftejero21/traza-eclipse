@@ -63,7 +63,7 @@ public final class AiCommands {
 
 	private static boolean send(String prompt) {
 		CopilotBridge.showNoticeOnce();
-		if (CopilotBridge.openChat(prompt, true)) {
+		if (CopilotBridge.openChatInTrazaMode(prompt, true)) {
 			return true;
 		}
 		MessageDialog.openError(Ui.shell(), "Traza", Ui.t("No se pudo abrir el chat de GitHub Copilot.", "The GitHub Copilot chat could not be opened."));
