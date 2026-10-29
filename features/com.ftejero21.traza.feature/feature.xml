@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature id="com.ftejero21.traza.feature"
+         label="Traza"
+         version="0.1.0.qualifier"
+         provider-name="Fernando Tejero (ftejero21)">
+
+   <description>
+      Traza: recorre como fluye una funcionalidad por el codigo, simula datos, analiza logs, explora bases de datos y simula cambios. La IA se usa a traves de GitHub Copilot for Eclipse (MCP).
+   </description>
+
+   <copyright>
+      Copyright (c) Fernando Tejero (ftejero21)
+   </copyright>
+
+   <license url="https://opensource.org/licenses/MIT">
+      MIT License. Copyright (c) Fernando Tejero (ftejero21). Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, subject to the conditions of the MIT License. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+   </license>
+
+   <plugin
+         id="com.ftejero21.traza"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <!-- Vista -->
+   <extension point="org.eclipse.ui.views">
+      <category id="com.ftejero21.traza.views.category" name="Traza"/>
+      <view
+            id="com.ftejero21.traza.views.flow"
+            name="%view.flow"
+            category="com.ftejero21.traza.views.category"
+            class="com.ftejero21.traza.ui.FlowView"
+            icon="icons/traza16.png"
+            allowMultiple="false"/>
+   </extension>
+
+   <!-- Comandos -->
+   <extension point="org.eclipse.ui.commands">
+      <category id="com.ftejero21.traza.commands.category" name="Traza"/>
+      <command id="com.ftejero21.traza.commands.openFlow" name="%cmd.openFlow" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.OpenFlowHandler"/>
+      <command id="com.ftejero21.traza.commands.openSampleFlow" name="%cmd.openSampleFlow" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.OpenSampleFlowHandler"/>
+      <command id="com.ftejero21.traza.commands.generateFlow" name="%cmd.generateFlow" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.GenerateFlowHandler"/>
+      <command id="com.ftejero21.traza.commands.proposeChange" name="%cmd.proposeChange" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.ProposeChangeHandler"/>
+      <command id="com.ftejero21.traza.commands.selectModel" name="%cmd.selectModel" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.SelectModelHandler"/>
+      <command id="com.ftejero21.traza.commands.showLastFlow" name="%cmd.showLastFlow" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.ShowLastFlowHandler"/>
+      <command id="com.ftejero21.traza.commands.showFlow" name="%cmd.showFlow" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.ShowFlowHandler">
+         <commandParameter id="com.ftejero21.traza.commands.showFlow.flowId" name="flowId" optional="false"/>
+         <commandParameter id="com.ftejero21.traza.commands.showFlow.mode" name="mode" optional="true"/>
+      </command>
+      <command id="com.ftejero21.traza.commands.addDatabase" name="%cmd.addDatabase" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.AddDatabaseHandler"/>
+      <command id="com.ftejero21.traza.commands.setDatabasePassword" name="%cmd.setDatabasePassword" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.SetDatabasePasswordHandler"/>
+      <command id="com.ftejero21.traza.commands.testDatabase" name="%cmd.testDatabase" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.TestDatabaseHandler"/>
+      <command id="com.ftejero21.traza.commands.removeDatabase" name="%cmd.removeDatabase" categoryId="com.ftejero21.traza.commands.category"
+            defaultHandler="com.ftejero21.traza.ui.handlers.RemoveDatabaseHandler"/>
+   </extension>
+
+   <!-- Menu principal y menus contextuales -->
+   <extension point="org.eclipse.ui.menus">
+      <menuContribution locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu id="traza.menu" label="%menu.traza">
+            <command commandId="com.ftejero21.traza.commands.openFlow" label="%cmd.openFlow" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.openSampleFlow" label="%cmd.openSampleFlow" style="push"/>
+            <separator name="ai" visible="true"/>
+            <command commandId="com.ftejero21.traza.commands.generateFlow" label="%cmd.generateFlow" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.proposeChange" label="%cmd.proposeChange" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.selectModel" label="%cmd.selectModel" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.showLastFlow" label="%cmd.showLastFlow" style="push"/>
+            <separator name="db" visible="true"/>
+            <command commandId="com.ftejero21.traza.commands.addDatabase" label="%cmd.addDatabase" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.setDatabasePassword" label="%cmd.setDatabasePassword" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.testDatabase" label="%cmd.testDatabase" style="push"/>
+            <command commandId="com.ftejero21.traza.commands.removeDatabase" label="%cmd.removeDatabase" style="push"/>
+         </menu>
+      </menuContribution>
+      <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <command commandId="com.ftejero21.traza.commands.openFlow" label="%popup.openFlow" icon="icons/traza16.png" style="push">
+            <visibleWhen checkEnabled="false">
+               <or>
+                  <with variable="selection">
+                     <iterate ifEmpty="false" operator="or">
+                        <adapt type="org.eclipse.core.resources.IFile">
+                           <test property="org.eclipse.core.resources.name" value="*.flow.json"/>
+                        </adapt>
+                     </iterate>
+                  </with>
+                  <with variable="activeEditorInput">
+                     <adapt type="org.eclipse.core.resources.IFile">
+                        <test property="org.eclipse.core.resources.name" value="*.flow.json"/>
+                     </adapt>
+                  </with>
+               </or>
+            </visibleWhen>
+         </command>
+         <command commandId="com.ftejero21.traza.commands.generateFlow" label="%popup.generateFlow" icon="icons/traza16.png" style="push">
+            <visibleWhen checkEnabled="false">
+               <with variable="activePart">
+                  <instanceof value="org.eclipse.ui.texteditor.ITextEditor"/>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+
+   <!-- Preferencias -->
+   <extension point="org.eclipse.ui.preferencePages">
+      <page id="com.ftejero21.traza.prefs.main" name="Traza" class="com.ftejero21.traza.ui.prefs.TrazaPreferencePage"/>
+      <page id="com.ftejero21.traza.prefs.databases" name="%prefs.databases" category="com.ftejero21.traza.prefs.main"
+            class="com.ftejero21.traza.ui.prefs.DatabasesPreferencePage"/>
+   </extension>
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="com.ftejero21.traza.prefs.PreferenceInitializer"/>
+   </extension>
+
+   <!-- Arranque: si Copilot esta presente, se arranca el servidor local -->
+   <extension point="org.eclipse.ui.startup">
+      <startup class="com.ftejero21.traza.TrazaStartup"/>
+   </extension>
+
+   <!-- Registro automatico del servidor MCP en GitHub Copilot for Eclipse (solo si Copilot esta instalado) -->
+   <extension point="com.microsoft.copilot.eclipse.ui.mcpRegistration">
+      <provider class="com.ftejero21.traza.mcp.CopilotMcpProviderFactory" id="traza"/>
+   </extension>
+
+   <!-- Enlaces traza:// (activar en Preferencias > General > Link Handlers) -->
+   <extension point="org.eclipse.urischeme.uriSchemeHandlers">
+      <uriSchemeHandler uriScheme="traza" uriSchemeDescription="Traza" class="com.ftejero21.traza.ui.TrazaUriSchemeHandler"/>
+   </extension>
+
+</plugin>

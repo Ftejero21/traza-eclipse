@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="com.ftejero21.traza.feature" version="0.0.0">
+      <category name="traza"/>
+   </feature>
+   <category-def name="traza" label="Traza"/>
+</site>
